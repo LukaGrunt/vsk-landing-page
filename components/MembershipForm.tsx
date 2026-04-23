@@ -487,8 +487,7 @@ export default function MembershipForm() {
                     <option value="">— izberite —</option>
                     <option value="Pištola">Pištola</option>
                     <option value="Puška">Puška</option>
-                    <option value="Revolver">Revolver</option>
-                    <option value="Pnevmatsko orožje">Pnevmatsko orožje</option>
+                    <option value="Šibrovka">Šibrovka</option>
                     <option value="Drugo">Drugo</option>
                   </select>
                 </div>
