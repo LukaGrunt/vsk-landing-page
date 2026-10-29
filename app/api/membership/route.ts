@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { supabase, MembershipApplication } from '@/lib/supabase'
 import { Resend } from 'resend'
+import { randomUUID } from 'crypto'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 
@@ -96,8 +97,11 @@ export async function POST(request: Request) {
       }
     }
 
-    // Prepare data for Supabase
-    const applicationData: Omit<MembershipApplication, 'id' | 'created_at' | 'status'> = {
+    // Prepare data for Supabase. The ID is created here because the public key
+    // can't read the saved row back.
+    const applicationId = randomUUID()
+    const applicationData: Omit<MembershipApplication, 'created_at' | 'status'> = {
+      id: applicationId,
       full_name: body.full_name,
       date_of_birth: body.date_of_birth,
       email: body.email,
@@ -118,11 +122,11 @@ export async function POST(request: Request) {
     }
 
     // Insert into Supabase
-    const { data, error } = await supabase
+    // Insert only: the anonymous key must not be able to read applications back
+    // (row-level security allows public INSERT but no public SELECT).
+    const { error } = await supabase
       .from('membership_applications')
       .insert([applicationData])
-      .select()
-      .single()
 
     if (error) {
       console.error('Supabase error:', error)
@@ -270,7 +274,7 @@ export async function POST(request: Request) {
         hour: '2-digit',
         minute: '2-digit'
       })}</p>
-      <p>ID prijave: ${data?.id || 'N/A'}</p>
+      <p>ID prijave: ${applicationId}</p>
     </div>
   </div>
 </body>
@@ -292,7 +296,7 @@ export async function POST(request: Request) {
     return NextResponse.json({
       success: true,
       message: 'Prijava uspešno oddana.',
-      id: data?.id,
+      id: applicationId,
     })
   } catch (error) {
     console.error('Request error:', error)
